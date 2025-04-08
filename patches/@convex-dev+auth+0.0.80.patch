@@ -1,0 +1,12 @@
+diff --git a/node_modules/@convex-dev/auth/src/react/index.tsx b/node_modules/@convex-dev/auth/src/react/index.tsx
+index 3063d0a..32b56f0 100644
+--- a/node_modules/@convex-dev/auth/src/react/index.tsx
++++ b/node_modules/@convex-dev/auth/src/react/index.tsx
+@@ -6,6 +6,7 @@
+ 
+ "use client";
+ 
++import React from 'react';
+ import { ConvexHttpClient } from "convex/browser";
+ import { ConvexProviderWithAuth, ConvexReactClient } from "convex/react";
+ import { Value } from "convex/values";
