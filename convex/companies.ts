@@ -231,25 +231,68 @@ export const getCompany = query({
       return await ctx.db
         .query("companies")
         .filter((q) => q.eq(q.field("adminId"), args.adminId))
-        .first();
+        .collect();
     }
     return await ctx.db
       .query("companies")
-      .first();
+      .collect();
   },
 });
 
 export const isCompanyAdmin = query({
   args: {
     userId: v.string(),
+    companyId: v.id("companies"),
   },
   handler: async (ctx, args) => {
-    const company = await ctx.db
-      .query("companies")
-      .filter((q) => q.eq(q.field("adminId"), args.userId))
-      .first();
+    const company = await ctx.db.get(args.companyId);
+    return company?.adminId === args.userId;
+  },
+});
+
+export const updateCompany = mutation({
+  args: {
+    companyId: v.id("companies"),
+    name: v.string(),
+    role: v.string(),
+    location: v.string(),
+    image: v.string(),
+    storageId: v.optional(v.string()),
+    color: v.string(),
+    type: v.string(),
+    socialLinks: v.object({
+      website: v.optional(v.string()),
+    }),
+    vision: v.string(),
+    mission: v.string(),
+    principles: v.array(v.string()),
+    values: v.array(v.string()),
+  },
+  handler: async (ctx, args) => {
+    const { companyId, ...updateData } = args;
     
-    return !!company;
+    // Verify company exists
+    const company = await ctx.db.get(companyId);
+    if (!company) {
+      throw new Error("Company not found");
+    }
+
+    // If there's a new storageId, delete the old one
+    if (updateData.storageId && company.storageId && updateData.storageId !== company.storageId) {
+      try {
+        await ctx.storage.delete(company.storageId);
+      } catch (error) {
+        console.error('Failed to delete old image:', error);
+      }
+    }
+
+    // Update company
+    await ctx.db.patch(companyId, {
+      ...updateData,
+      updatedAt: Date.now(),
+    });
+
+    return companyId;
   },
 });
 
@@ -281,4 +324,84 @@ export const getTask = query({
       checklist: checklist ? checklist.items : null
     };
   },
-}); 
+});
+
+export const getTasksForCompanies = query({
+  args: {},
+  handler: async (ctx) => {
+    // Get all companies first
+    const companies = await ctx.db
+      .query("companies")
+      .collect();
+
+    // Get tasks for all companies
+    const tasks = await ctx.db
+      .query("tasks")
+      .collect();
+
+    // Create a map of company ID to tasks
+    const tasksByCompany = new Map();
+    for (const company of companies) {
+      tasksByCompany.set(
+        company._id, 
+        tasks.filter(task => task.companyId === company._id)
+      );
+    }
+
+    return {
+      companies,
+      tasksByCompany: Object.fromEntries(tasksByCompany)
+    };
+  },
+});
+
+export const deleteTask = mutation({
+  args: {
+    taskId: v.id("tasks"),
+  },
+  handler: async (ctx, args) => {
+    const task = await ctx.db.get(args.taskId);
+    if (!task) {
+      throw new Error("Task not found");
+    }
+
+    // Delete the task
+    await ctx.db.delete(args.taskId);
+    return true;
+  },
+});
+
+export const createCompany = mutation({
+  args: {
+    name: v.string(),
+    role: v.string(),
+    location: v.string(),
+    image: v.string(),
+    type: v.string(),
+    color: v.optional(v.string()),
+    adminId: v.string(),
+    storageId: v.optional(v.string()),
+    socialLinks: v.object({
+      website: v.optional(v.string()),
+    }),
+    vision: v.string(),
+    mission: v.string(),
+    principles: v.array(v.string()),
+    values: v.array(v.string()),
+  },
+  handler: async (ctx, args) => {
+    const { color, type, storageId, ...otherFields } = args;
+    
+    const companyData = {
+      ...otherFields,
+      type,
+      storageId,
+      color: color ?? "#000000", // Default color if none provided
+      createdAt: Date.now(),
+      updatedAt: Date.now(),
+    };
+
+    const companyId = await ctx.db.insert("companies", companyData);
+    return companyId;
+  },
+});

@@ -116,7 +116,9 @@ export default defineSchema({
     role: v.string(),
     location: v.string(),
     image: v.string(),
+    storageId: v.optional(v.string()),
     color: v.string(),
+    type: v.optional(v.string()),
     adminId: v.optional(v.string()), // ID of the admin user
     socialLinks: v.object({
       website: v.optional(v.string()),
