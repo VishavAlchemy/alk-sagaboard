@@ -60,7 +60,11 @@ export const create = mutation({
     // Create the profile
     const profileId = await ctx.db.insert("avatarProfiles", {
       userId: args.userId,
-      ...profile,
+      personalInfo: profile.personalInfo,
+      experience: profile.experience,
+      skills: profile.skills,
+      aboutMe: profile.aboutMe,
+      projects: profile.projects
     });
 
     return profileId;
