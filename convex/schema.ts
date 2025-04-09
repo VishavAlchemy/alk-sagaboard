@@ -110,4 +110,90 @@ export default defineSchema({
       color: v.string(),
     })),
   }).index("by_userId", ["userId"]),
+
+  companies: defineTable({
+    name: v.string(),
+    role: v.string(),
+    location: v.string(),
+    image: v.string(),
+    color: v.string(),
+    adminId: v.optional(v.string()), // ID of the admin user
+    socialLinks: v.object({
+      website: v.optional(v.string()),
+    }),
+    vision: v.string(),
+    mission: v.string(),
+    principles: v.array(v.string()),
+    values: v.array(v.string()),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  }),
+
+  tasks: defineTable({
+    companyId: v.id("companies"),
+    category: v.string(),
+    text: v.string(),
+    name: v.optional(v.string()),
+    forRole: v.optional(v.string()),
+    reward: v.union(
+      v.number(),
+      v.object({
+        type: v.string(),
+        details: v.object({
+          amount: v.string(),
+          currency: v.string(),
+          description: v.optional(v.string())
+        })
+      })
+    ),
+    description: v.optional(v.string()),
+    explanation: v.optional(v.string()),
+    additionalInfo: v.optional(v.string()),
+    checklistId: v.optional(v.id("checklists")),
+    status: v.string(),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+    assignedTo: v.optional(v.id("users")),
+  }).index("by_company", ["companyId"])
+    .index("by_category", ["companyId", "category"])
+    .index("by_status", ["companyId", "status"]),
+
+  submissions: defineTable({
+    taskId: v.id("tasks"),
+    userId: v.string(),
+    text: v.string(),
+    url: v.optional(v.string()),
+    fileId: v.optional(v.string()),
+    fileName: v.optional(v.string()),
+    status: v.string(), // "pending", "approved", "rejected"
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  }).index("by_task", ["taskId"])
+    .index("by_user", ["userId"]),
+
+  notifications: defineTable({
+    userId: v.string(),
+    type: v.string(), // "task_submission", "submission_approved", etc.
+    title: v.string(),
+    message: v.string(),
+    read: v.boolean(),
+    metadata: v.object({
+      taskId: v.optional(v.id("tasks")),
+      submissionId: v.optional(v.id("submissions")),
+      companyId: v.optional(v.id("companies")),
+    }),
+    createdAt: v.number(),
+  }).index("by_user", ["userId", "createdAt"]),
+
+  checklists: defineTable({
+    creatorId: v.string(), // adminId who created the checklist
+    name: v.string(),
+    items: v.array(v.object({
+      id: v.string(),
+      text: v.string(),
+      completed: v.boolean(),
+    })),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  }).index("by_creator", ["creatorId"]),
 }); 

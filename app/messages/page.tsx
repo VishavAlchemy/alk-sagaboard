@@ -28,9 +28,9 @@ interface ConversationWithUser {
 
 const ChatMessage = ({ message, isOwn }: { message: any, isOwn: boolean }) => (
   <div className={`flex ${isOwn ? 'justify-end' : 'justify-start'} mb-4`}>
-    <div className={`${isOwn ? 'bg-black text-white' : 'bg-gray-100'} rounded-2xl px-4 py-2 max-w-[70%]`}>
+    <div className={`${isOwn ? 'bg-gray-800 text-white' : 'bg-gray-900 text-gray-300'} rounded-2xl px-4 py-2 max-w-[70%]`}>
       <p>{message.content}</p>
-      <span className="text-xs opacity-70">
+      <span className="text-xs text-gray-400">
         {new Date(message.createdAt).toLocaleTimeString()}
       </span>
     </div>
@@ -67,10 +67,9 @@ const UserProfileImage = ({ user }: { user: any }) => {
 };
 
 const LoadingState = () => (
-  <div className="flex bg-white min-h-screen">
-    <Sidebar />
+  <div className="flex bg-black min-h-screen">
     <div className="flex-1 flex items-center justify-center">
-      <div className="animate-pulse text-gray-500">Loading messages...</div>
+      <div className="animate-pulse text-gray-400">Loading messages...</div>
     </div>
   </div>
 )
@@ -122,25 +121,24 @@ const MessagesContent = () => {
   }
 
   return (
-    <div className="flex bg-white min-h-screen">
-      <Sidebar />
+    <div className="flex bg-black min-h-screen">
       
       {/* Conversations List */}
-      <div className="w-[280px] border-r border-gray-200 overflow-y-auto">
+      <div className="w-[280px] border-r border-gray-800 overflow-y-auto">
         {conversations && conversations.length > 0 ? (
           conversations.map((conversation) => (
             <div
               key={conversation._id}
               onClick={() => setSelectedConversation(conversation)}
-              className={`p-4 cursor-pointer hover:bg-gray-50 ${
-                selectedConversation?._id === conversation._id ? 'bg-gray-50' : ''
+              className={`p-4 cursor-pointer hover:bg-gray-900 ${
+                selectedConversation?._id === conversation._id ? 'bg-gray-900' : ''
               }`}
             >
               <div className="flex items-center gap-3">
                 <UserProfileImage user={conversation.otherUser} />
                 <div className="min-w-0 flex-1">
-                  <h3 className="font-semibold truncate text-black">{conversation.otherUser?.firstName}</h3>
-                  <p className="text-sm text-gray-500 truncate max-w-[180px]">
+                  <h3 className="font-semibold truncate text-white">{conversation.otherUser?.firstName}</h3>
+                  <p className="text-sm text-gray-400 truncate max-w-[180px]">
                     {conversation.lastMessage || "No messages yet"}
                   </p>
                 </div>
@@ -148,24 +146,24 @@ const MessagesContent = () => {
             </div>
           ))
         ) : (
-          <div className="p-4 text-gray-500 text-center">
+          <div className="p-4 text-gray-400 text-center">
             <p className="mb-2">No conversations yet</p>
-            <a href="/explore" className="text-blue-500 hover:underline">
-              Explore users to start chatting
+            <a href="/members" className="text-blue-400 hover:underline">
+              Connect with buidlers, designers, engineers, etc.
             </a>
           </div>
         )}
       </div>
 
       {/* Chat Area */}
-      <div className="flex-1 flex flex-col text-black">
+      <div className="flex-1 flex flex-col text-white">
         {selectedConversation ? (
           <>
             {/* Chat Header */}
-            <div className="p-4 border-b border-gray-200">
+            <div className="p-4 border-b border-gray-800">
               <div className="flex items-center gap-3">
                 <UserProfileImage user={selectedConversation.otherUser} />
-                <h2 className="font-semibold text-black">{selectedConversation.otherUser?.firstName} </h2>
+                <h2 className="font-semibold text-white">{selectedConversation.otherUser?.firstName} </h2>
               </div>
             </div>
 
@@ -182,7 +180,7 @@ const MessagesContent = () => {
                   ))}
                 </>
               ) : (
-                <div className="flex justify-center items-center h-full text-gray-500">
+                <div className="flex justify-center items-center h-full text-gray-400">
                   <p>No messages yet. Start the conversation!</p>
                 </div>
               )}
@@ -190,18 +188,18 @@ const MessagesContent = () => {
             </div>
 
             {/* Message Input */}
-            <form onSubmit={handleSendMessage} className="p-4 border-t border-gray-200">
+            <form onSubmit={handleSendMessage} className="p-4 border-t border-gray-800">
               <div className="flex gap-2">
                 <input
                   type="text"
                   value={newMessage}
                   onChange={(e) => setNewMessage(e.target.value)}
                   placeholder="Type a message..."
-                  className="flex-1 px-4 py-2 border border-gray-300 rounded-full focus:outline-none focus:border-black"
+                  className="flex-1 px-4 py-2 bg-gray-900 border border-gray-700 text-white rounded-full focus:outline-none focus:border-gray-600 placeholder-gray-500"
                 />
                 <button
                   type="submit"
-                  className="bg-black text-white px-6 py-2 rounded-full hover:bg-gray-800 transition-colors"
+                  className="bg-white text-black px-6 py-2 rounded-full hover:bg-gray-200 transition-colors"
                 >
                   Send
                 </button>
@@ -209,12 +207,12 @@ const MessagesContent = () => {
             </form>
           </>
         ) : (
-          <div className="flex-1 flex items-center justify-center text-gray-500">
+          <div className="flex-1 flex items-center justify-center text-gray-400">
             <div className="text-center">
               <p className="mb-2">Select a conversation to start messaging</p>
               {conversations && conversations.length === 0 && (
-                <a href="/explore" className="text-blue-500 hover:underline">
-                  Or explore users to start a new chat
+                <a href="/members" className="text-blue-400 hover:underline">
+                  Or connect with buidlers, designers, engineers, etc.
                 </a>
               )}
             </div>

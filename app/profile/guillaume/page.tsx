@@ -60,9 +60,9 @@ const userData = {
   aboutMe: {
     aboutMe: "I enjoy nature, building & learning in the space of AI, economics & productivity.",
     favoriteBooks: [
-      "Alchemist",
-      "Good to Great",
-      "Surrender Experiment",
+      "Elon Musk",
+      "The Alchemist",
+      "The 48 Laws of Power",
     ]
   },
   projects: [
@@ -73,7 +73,7 @@ const userData = {
         "- Achieved a 20% increase in production capacity",
       "- Trained and developed a team of 20+ employees",
       ],
-      date: "February 2022 - February 2024",
+      date: "February 2012 - February 2024",
       color: "orange"
     },
    
@@ -85,9 +85,19 @@ const userData = {
         "- Created a community of 100+ students",
         "- Started philotees & writing about philosophy",
       ],
-      date: "September 2024 - Present",
+      date: "September 2000 - Present",
       color: "green"
     },
+    {
+      id: "nextjs",
+      title: "Full Stack Developer + AI",
+      description: [
+        "- Built React Native App with Expo",
+        "- Built a Full Stack App with NextJS",
+      ],
+      date: "February 2023 - Present",
+      color: "blue"
+    }
   ]
 };
 
