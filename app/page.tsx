@@ -70,7 +70,7 @@ export default function Home() {
           <Image src="/alk-cities.svg" alt="SagaCity Logo" width={450} height={450} />
         </div>
           <h1 className="text-5xl md:text-6xl font-bold text-center text-white">Find Your Squad, Build & <br /> Scale Digital Infrastructure</h1>
-          <p className={`text-xl md:text-2xl mt-4 ${Geist_Mono.className} text-center text-white/90`}>We help connect squads & digital builders into <br />  organizations & projects to build digital infrastructure</p>
+          <p className={`text-xl md:text-2xl mt-4 ${Geist_Mono.className} text-center text-white/90`}>We help deploy squads & digital builders into <br />  organizations & projects to build digital infrastructure</p>
 
         {/*   <div className="flex overflow-x-auto justify-start md:justify-center items-center gap-3 md:gap-5 mt-8 px-2 pb-2 no-scrollbar">
             {circleData.map((circle) => (
@@ -204,3 +204,4 @@ export default function Home() {
       </footer> */}
     </div>
   );
+}
