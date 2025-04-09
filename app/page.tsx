@@ -57,7 +57,7 @@ export default function Home() {
 
   return (
     <div className="font-[family-name:var(--font-geist-sans)]">
-      <div className="relative bg-[#222222] overflow-hidden">
+      <div className="relative bg-[#151515] overflow-hidden">
       <h4 className={`text-center text-md ${Geist_Mono.className} text-white/90 py-2`}>For Builders, Hackers, Designers, Marketers & Entrepreneurs</h4>
       </div>
 

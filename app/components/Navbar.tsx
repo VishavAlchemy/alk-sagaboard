@@ -4,8 +4,11 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { Geist_Mono } from './fonts'
 import AnimatedButton from './AnimatedButton'
+import { useUser, UserButton } from '@clerk/nextjs'
+
 const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const { isSignedIn } = useUser();
 
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen);
@@ -44,11 +47,17 @@ const Navbar = () => {
         
         <div className="flex items-center space-x-4">
             <div className="hidden md:block">
-            <Link href="/sign-up">
-            <button className="bg-white text-xl text-black px-6 py-3 ">
-              Sign Up
-            </button>
-            </Link>
+              {isSignedIn ? (
+                <div className="scale-170">
+                  <UserButton afterSignOutUrl="/" />
+                </div>
+              ) : (
+                <Link href="/sign-up">
+                  <button className="bg-white text-xl text-black px-6 py-3">
+                    Sign Up
+                  </button>
+                </Link>
+              )}
             </div>
           
           {/* Mobile menu button */}

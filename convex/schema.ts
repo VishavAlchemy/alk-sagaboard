@@ -1,5 +1,6 @@
 import { defineSchema, defineTable } from "convex/server";
 import { v } from "convex/values";
+import { type Id } from "./_generated/dataModel";
 
 export default defineSchema({
   users: defineTable({
@@ -75,4 +76,38 @@ export default defineSchema({
     type: v.optional(v.string()),
     createdAt: v.number(),
   }).index("by_participants", ["participantIds"]),
+
+  avatarProfiles: defineTable({
+    userId: v.string(),
+    personalInfo: v.object({
+      name: v.string(),
+      role: v.string(),
+      location: v.string(),
+      image: v.string(),
+      socialLinks: v.object({
+        website: v.string(),
+        github: v.string(),
+        twitter: v.string(),
+      }),
+    }),
+    experience: v.array(v.object({
+      icon: v.string(),
+      text: v.string(),
+    })),
+    skills: v.array(v.object({
+      icon: v.string(),
+      text: v.string(),
+    })),
+    aboutMe: v.object({
+      aboutMe: v.string(),
+      favoriteBooks: v.array(v.string()),
+    }),
+    projects: v.array(v.object({
+      id: v.string(),
+      title: v.string(),
+      description: v.array(v.string()),
+      date: v.optional(v.string()),
+      color: v.string(),
+    })),
+  }).index("by_userId", ["userId"]),
 }); 

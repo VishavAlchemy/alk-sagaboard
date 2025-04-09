@@ -1,10 +1,12 @@
 'use client'
-import React from 'react'
+import React, { useEffect, useState } from 'react'
 import Image from 'next/image'
-import { useAvatarProfile } from '../hooks/useAvatarProfile'
+import { useParams } from 'next/navigation'
+import { useAvatarProfile } from '@/app/hooks/useAvatarProfile'
 import { useAuth } from "@clerk/nextjs";
-import { type AvatarProfile } from '../types/avatarProfile';
+import { type AvatarProfile } from '@/app/types/avatarProfile';
 import { useRouter } from 'next/navigation'
+import EditProfileButton from '@/app/components/EditProfileButton'
 // Assuming Sidebar might be needed later or can be removed if not part of the new design
 // import Sidebar from '../components/Sidebar' 
 
@@ -73,9 +75,28 @@ const getProjectBorderColor = (color: string) => {
 };
 
 const ProfilePage = () => {
-  const { profile, isLoading, isAuthenticated, createProfile } = useAvatarProfile();
+  const params = useParams();
   const { userId, isLoaded: isAuthLoaded } = useAuth();
+  const { profile: myProfile, allProfiles, isLoading, isAuthenticated, createProfile } = useAvatarProfile();
+  const [profileData, setProfileData] = useState<AvatarProfile | null>(null);
+  const [isOwnProfile, setIsOwnProfile] = useState(false);
   const router = useRouter();
+
+  // Determine if this is the user's own profile
+  useEffect(() => {
+    if (params.id && userId) {
+      // Check if viewing own profile
+      setIsOwnProfile(params.id === userId);
+      
+      // Find profile by the ID parameter
+      if (allProfiles) {
+        const foundProfile = allProfiles.find(p => p.userId === params.id);
+        setProfileData(foundProfile || null);
+      } else if (isOwnProfile && myProfile) {
+        setProfileData(myProfile);
+      }
+    }
+  }, [params.id, userId, myProfile, allProfiles, isOwnProfile]);
 
   // Show loading state while auth or profile is loading
   if (!isAuthLoaded || isLoading) {
@@ -92,74 +113,78 @@ const ProfilePage = () => {
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
           <h1 className="text-2xl font-bold mb-4">Please Sign In</h1>
-          <p className="text-gray-400">You need to be signed in to view your profile.</p>
+          <p className="text-gray-400">You need to be signed in to view profiles.</p>
         </div>
       </div>
     );
   }
 
-  // Show profile not found if authenticated but no profile
-  if (!profile) {
+  // Show profile not found if no profile found for the given ID
+  if (!profileData) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
           <h1 className="text-2xl font-bold mb-4">Profile Not Found</h1>
-          <p className="text-gray-400 mb-4">No profile exists yet for your account.</p>
-          <button
-            onClick={async () => {
-              try {
-                await createProfile({
-                  userId: userId || "",
-                  profile: {
-                    personalInfo: {
-                      name: "Your Name",
-                      role: "Your Role",
-                      location: "Your Location",
-                      image: "/profilev1/pp.svg",
-                      socialLinks: {
-                        website: "https://yourwebsite.com",
-                        github: "https://github.com/yourusername",
-                        twitter: "https://twitter.com/yourusername"
-                      }
-                    },
-                    experience: [
-                      {
-                        icon: "orange",
-                        text: "Your first experience"
-                      }
-                    ],
-                    skills: [
-                      {
-                        icon: "blue",
-                        text: "Your first skill"
-                      }
-                    ],
-                    aboutMe: {
-                      aboutMe: "Tell us about yourself",
-                      favoriteBooks: ["Your favorite book"]
-                    },
-                    projects: [
-                      {
-                        id: "1",
-                        title: "Your First Project",
-                        description: ["Project description"],
-                        color: "green"
-                      }
-                    ]
-                  }
-                });
-              } catch (error) {
-                console.error("Error creating profile:", error);
-              }
-            }}
-            className="bg-white text-black hover:bg-gray-200 px-5 py-2 rounded text-sm"
-          >
-            Create Profile
-          </button>
+          <p className="text-gray-400 mb-4">No profile exists for this user.</p>
+          {isOwnProfile && (
+            <button
+              onClick={async () => {
+                try {
+                  await createProfile({
+                    userId: userId || "",
+                    profile: {
+                      personalInfo: {
+                        name: "Your Name",
+                        role: "Your Role",
+                        location: "Your Location",
+                        image: "/profilev1/pp.svg",
+                        socialLinks: {
+                          website: "https://yourwebsite.com",
+                          github: "https://github.com/yourusername",
+                          twitter: "https://twitter.com/yourusername"
+                        }
+                      },
+                      experience: [
+                        {
+                          icon: "orange",
+                          text: "Your first experience"
+                        }
+                      ],
+                      skills: [
+                        {
+                          icon: "blue",
+                          text: "Your first skill"
+                        }
+                      ],
+                      aboutMe: {
+                        aboutMe: "Tell us about yourself",
+                        favoriteBooks: ["Your favorite book"]
+                      },
+                      projects: [
+                        {
+                          id: "1",
+                          title: "Your First Project",
+                          description: ["Project description"],
+                          color: "green"
+                        }
+                      ]
+                    }
+                  });
+                } catch (error) {
+                  console.error("Error creating profile:", error);
+                }
+              }}
+              className="bg-white text-black hover:bg-gray-200 px-5 py-2 rounded text-sm"
+            >
+              Create Profile
+            </button>
+          )}
         </div>
       </div>
     );
   }
+
+  const profile = profileData;
 
   return (
     <div className="flex flex-col bg-black min-h-screen text-white py-6">
@@ -187,17 +212,16 @@ const ProfilePage = () => {
                     <p className="text-gray-400">{profile.personalInfo.role}</p>
                     <p className="text-gray-400 mb-3">{profile.personalInfo.location}</p>
                   </div>
-                  <button
-                    onClick={() => router.push('/profile/edit')}
-                    className="bg-gray-800 text-white hover:bg-gray-700 px-4 py-2 rounded text-sm"
-                  >
-                    Edit Profile
-                  </button>
+                  {isOwnProfile && (
+                   <EditProfileButton />
+                  )}
                 </div>
                 <div className="flex items-center space-x-2">
-                  <button className="bg-white text-black hover:bg-gray-200 px-5 py-1.5 rounded text-sm">
-                    Message
-                  </button>
+                  {!isOwnProfile && (
+                    <button className="bg-white text-black hover:bg-gray-200 px-5 py-1.5 rounded text-sm">
+                      Message
+                    </button>
+                  )}
                   <a href={profile.personalInfo.socialLinks.website} target="_blank" rel="noopener noreferrer" className="bg-transparent hover:bg-gray-800 p-2 rounded-full transition-colors">
                     <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-gray-400 hover:text-white">
                       <circle cx="12" cy="12" r="10"></circle>
@@ -224,7 +248,7 @@ const ProfilePage = () => {
               <h2 className="text-2xl font-semibold">Experience</h2>
               <div className="bg-black rounded-lg p-4 text-sm text-gray-300">
                 <div className="space-y-3">
-                  {profile.experience.map((exp, index) => (
+                  {profile.experience.map((exp: { icon: string; text: string }, index: number) => (
                     <div key={index} className="flex items-start space-x-2">
                       <svg width="12" height="12" viewBox="0 0 10 10" className={`flex-shrink-0 mt-1 ${getIconColor(exp.icon)}`}>
                         <polygon points="5,1 9,9 1,9" />
@@ -243,7 +267,7 @@ const ProfilePage = () => {
                 <h2 className="text-2xl font-semibold">Skills</h2>
                 <div className="bg-black rounded-lg p-4 text-sm text-gray-300 h-full">
                   <div className="space-y-2 mt-2">
-                    {profile.skills.map((skill, index) => (
+                    {profile.skills.map((skill: { icon: string; text: string }, index: number) => (
                       <div key={index} className="flex items-start space-x-2">
                         <svg width="12" height="12" viewBox="0 0 10 10" className={`flex-shrink-0 mt-1 ${getIconColor(skill.icon)}`}>
                           <circle cx="5" cy="5" r="4" />
@@ -263,7 +287,7 @@ const ProfilePage = () => {
                     <p>{profile.aboutMe.aboutMe}</p>
                     <p>Favorite books:</p>
                     <ul className="list-disc list-inside pl-4">
-                      {profile.aboutMe.favoriteBooks.map((book, index) => (
+                      {profile.aboutMe.favoriteBooks.map((book: string, index: number) => (
                         <li key={index}>{book}</li>
                       ))}
                     </ul>
@@ -282,11 +306,11 @@ const ProfilePage = () => {
             
             {/* Projects Section */}
             <div className="bg-black rounded-lg p-4 text-sm text-gray-300">
-              {profile.projects.map((project) => (
+              {profile.projects.map((project: { id: string; title: string; description: string[] | string; date?: string; color: string }) => (
                 <div key={project.id} className={`border border-gray-700 p-3 rounded-lg mb-3 transition-colors hover:bg-gray-900 border-t-2 ${getProjectBorderColor(project.color)} min-h-[8rem]`}>
                   <h3 className="text-base font-semibold mb-1">{project.title}</h3>
                   {Array.isArray(project.description) ? (
-                    project.description.map((desc, index) => (
+                    project.description.map((desc: string, index: number) => (
                       <p key={index} className="text-xs text-gray-400 mb-1">{desc}</p>
                     ))
                   ) : (
