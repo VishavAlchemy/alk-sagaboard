@@ -1,9 +1,10 @@
 'use client'
-import React from 'react'
+import React, { useMemo } from 'react'
 import Image from 'next/image'
 import { useAvatarProfile } from '../hooks/useAvatarProfile'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import { useStorageUrl } from '../hooks/useStorageUrl'
 
 // Helper function to get icon color
 const getIconColor = (color: string) => {
@@ -34,6 +35,24 @@ const getIconColor = (color: string) => {
   return colors[color as keyof typeof colors] || "fill-gray-500";
 };
 
+// Separate component for profile image to properly handle hooks
+const ProfileImage = ({ imageSource, name }: { imageSource: string, name: string }) => {
+  const storageUrl = useStorageUrl(imageSource);
+  const finalImageUrl = imageSource.startsWith('http') || imageSource.startsWith('/') 
+    ? imageSource 
+    : storageUrl;
+
+  return (
+    <Image 
+      src={finalImageUrl || '/default-avatar.svg'}
+      alt={`${name} Profile Picture`}
+      width={50}
+      height={50}
+      className="rounded-full border-2 border-gray-700"
+    />
+  );
+};
+
 const MembersPage = () => {
   const { allProfiles, isAllProfilesLoading } = useAvatarProfile();
   const router = useRouter();
@@ -58,44 +77,43 @@ const MembersPage = () => {
 
         {/* Members Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-          {allProfiles && allProfiles.map((profile) => (
-            <div 
-              key={profile._id} 
-              className="bg-black border border-gray-800 rounded-lg p-4 hover:border-gray-600 transition-colors cursor-pointer"
-              onClick={() => router.push(`/profile/user/${profile.userId}`)}
-            >
-              <div className="flex items-center space-x-3 mb-3">
-                <Image 
-                  src={profile.personalInfo.image}
-                  alt={`${profile.personalInfo.name} Profile Picture`}
-                  width={50}
-                  height={50}
-                  className="rounded-full border-2 border-gray-700"
-                />
-                <div>
-                  <h3 className="font-bold">{profile.personalInfo.name}</h3>
-                  <p className="text-sm text-gray-400">{profile.personalInfo.location}</p>
+          {allProfiles && allProfiles.map((profile) => {
+            return (
+              <div 
+                key={profile._id} 
+                className="bg-black border border-gray-800 rounded-lg p-4 hover:border-gray-600 transition-colors cursor-pointer"
+                onClick={() => router.push(`/profile/user/${profile.userId}`)}
+              >
+                <div className="flex items-center space-x-3 mb-3">
+                  <ProfileImage 
+                    imageSource={profile.personalInfo.image}
+                    name={profile.personalInfo.name}
+                  />
+                  <div>
+                    <h3 className="font-bold">{profile.personalInfo.name}</h3>
+                    <p className="text-sm text-gray-400">{profile.personalInfo.location}</p>
+                  </div>
+                </div>
+                
+                <div className="space-y-2">
+                  {profile.experience.slice(0, 3).map((exp, index) => (
+                    <div key={index} className="flex items-start space-x-2">
+                      <svg width="10" height="10" viewBox="0 0 10 10" className={`flex-shrink-0 mt-1 ${getIconColor(exp.icon)}`}>
+                        <polygon points="5,1 9,9 1,9" />
+                      </svg>
+                      <p className="text-xs text-gray-300 line-clamp-1">{exp.text}</p>
+                    </div>
+                  ))}
+                </div>
+                
+                <div className="mt-3 pt-3 border-t border-gray-800 flex justify-end">
+                  <Link href="#" className="text-xs text-white bg-gray-800 px-3 py-1 rounded-full hover:bg-gray-700 transition-colors">
+                    Connect
+                  </Link>
                 </div>
               </div>
-              
-              <div className="space-y-2">
-                {profile.experience.slice(0, 3).map((exp, index) => (
-                  <div key={index} className="flex items-start space-x-2">
-                    <svg width="10" height="10" viewBox="0 0 10 10" className={`flex-shrink-0 mt-1 ${getIconColor(exp.icon)}`}>
-                      <polygon points="5,1 9,9 1,9" />
-                    </svg>
-                    <p className="text-xs text-gray-300 line-clamp-1">{exp.text}</p>
-                  </div>
-                ))}
-              </div>
-              
-              <div className="mt-3 pt-3 border-t border-gray-800 flex justify-end">
-                <Link href="#" className="text-xs text-white bg-gray-800 px-3 py-1 rounded-full hover:bg-gray-700 transition-colors">
-                  Connect
-                </Link>
-              </div>
-            </div>
-          ))}
+            )
+          })}
         </div>
       </div>
     </div>

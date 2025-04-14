@@ -14,7 +14,7 @@ interface ImageUploaderProps {
 }
 
 const ImageUploader: React.FC<ImageUploaderProps> = ({
-  initialImage,
+  initialImage = '/placeholder.svg',
   onImageChange,
   width = 100,
   height = 100,
@@ -22,7 +22,8 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
   placeholderClassName = '',
   isRounded = false
 }) => {
-  const [previewUrl, setPreviewUrl] = useState<string | null>(initialImage || null)
+  const [previewUrl, setPreviewUrl] = useState<string>(initialImage)
+  const [imageError, setImageError] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const handleClick = () => {
@@ -38,9 +39,15 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
     // Create a preview URL
     const fileUrl = URL.createObjectURL(file)
     setPreviewUrl(fileUrl)
+    setImageError(false)
     
     // Pass the file to the parent component
     onImageChange(file)
+  }
+
+  const handleImageError = () => {
+    setImageError(true)
+    setPreviewUrl('/placeholder.svg')
   }
 
   return (
@@ -57,20 +64,25 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
         onChange={handleFileChange}
       />
       
-      {previewUrl ? (
-        <Image 
-          src={previewUrl} 
-          alt="Uploaded image" 
-          fill
-          className={`object-cover ${isRounded ? 'rounded-full' : 'rounded'}`}
-        />
+      {!imageError ? (
+        <div className="relative w-full h-full">
+          <Image 
+            src={previewUrl} 
+            alt="Uploaded image" 
+            fill
+            className={`object-cover ${isRounded ? 'rounded-full' : 'rounded'}`}
+            onError={handleImageError}
+            sizes={`${width}px`}
+            priority={true}
+          />
+        </div>
       ) : (
         <div 
           className={`w-full h-full flex items-center justify-center ${
             isRounded ? 'rounded-full' : 'rounded'
-          } bg-gray-200 hover:bg-gray-300 transition-colors ${placeholderClassName}`}
+          } bg-gray-800 hover:bg-gray-700 transition-colors ${placeholderClassName}`}
         >
-          <PlusIcon className="w-6 h-6 text-gray-500" />
+          <PlusIcon className="w-6 h-6 text-gray-400" />
         </div>
       )}
       

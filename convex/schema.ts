@@ -79,6 +79,7 @@ export default defineSchema({
 
   avatarProfiles: defineTable({
     userId: v.string(),
+    profilePictureId: v.optional(v.string()),
     personalInfo: v.object({
       name: v.string(),
       role: v.string(),
@@ -120,6 +121,7 @@ export default defineSchema({
     color: v.string(),
     type: v.optional(v.string()),
     adminId: v.optional(v.string()), // ID of the admin user
+    description: v.optional(v.string()),
     socialLinks: v.object({
       website: v.optional(v.string()),
     }),

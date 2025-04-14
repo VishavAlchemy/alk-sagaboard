@@ -5,7 +5,7 @@ import React from 'react';
 // Define TypeScript interfaces for data structures
 interface Bounty {
   id: string;
-  icon: '❓' | '🔥' | '💡'; // Placeholder icons
+  icon: string; // Allow any string/emoji for icon
   text: string;
   builders?: string;
   reward?: string;
@@ -87,25 +87,12 @@ const projectsData: Project[] = [
     ],
   },
   {
-      id: 'network-skool',
-      iconColor: 'bg-gray-700', // Using gray as a placeholder, adjust if needed
-      iconInitial: 'N',
-      name: 'Network Skool',
-      description: 'A place for digital network state builders',
-      tag: { text: 'Digital ecosystem', bgColor: 'bg-gray-600', textColor: 'text-white' },
-      bounties: [
-          { id: 'b1', icon: '❓', text: 'Create Hackathon', builders: '(1-3 builders)' },
-          { id: 'b2', icon: '❓', text: 'Create NS Wiki', builders: '(1-3 builders)' },
-          { id: 'b3', icon: '❓', text: 'Host Build Session', builders: '(1-3 builders)' },
-      ],
-  },
-  {
       id: 'sagacity',
-      iconColor: 'bg-teal-500', // Placeholder color
+      iconColor: 'bg-teal-500',
       iconInitial: 'S',
       name: 'SagaCity',
       description: 'Building a better internet infrastructure',
-      tag: { text: 'Digital ecosystem', bgColor: 'bg-gray-600', textColor: 'text-white' }, // Reusing tag style
+      tag: { text: 'Digital ecosystem', bgColor: 'bg-gray-600', textColor: 'text-white' },
       bounties: [
           { id: 'b1', icon: '❓', text: 'Create Board', builders: '(1-3 builders)', reward: '$1500 SAGA' },
           { id: 'b2', icon: '❓', text: 'Create Reward System', builders: '(1-3 builders)', reward: '$2500 SAGA' },
@@ -114,28 +101,15 @@ const projectsData: Project[] = [
   },
   {
       id: 'omi',
-      iconColor: 'bg-gray-300', // Placeholder color
+      iconColor: 'bg-gray-300',
       iconInitial: 'O',
       name: 'Omi',
       description: 'Your Digital AI Necklace',
-      tag: { text: 'Startup', bgColor: 'bg-yellow-400', textColor: 'text-black' }, // Reusing tag style
+      tag: { text: 'Startup', bgColor: 'bg-yellow-400', textColor: 'text-black' },
       bounties: [
           { id: 'b1', icon: '❓', text: 'Improve CR', builders: '(10) Digital Builders', reward: '$2000 USD' },
           { id: 'b2', icon: '🔥', text: 'Build IOS App', builders: '(10) Digital Builders', reward: '$4500 USD' },
-          { id: 'b3', icon: '🔥', text: 'AI Integrations?', builders: '(1-3 builders)' }, // Added a missing bounty for structure
-      ],
-  },
-  {
-      id: 'goose',
-      iconColor: 'bg-black',
-      iconInitial: 'G',
-      name: 'Goose',
-      description: 'AI Agents Deployed',
-      tag: { text: 'AI Open Source', bgColor: 'bg-gray-700', textColor: 'text-white' },
-      bounties: [
-          { id: 'b1', icon: '❓', text: 'Get User Feedback', builders: '(1-3 builders)', reward: '$1500 USD' },
-          { id: 'b2', icon: '❓', text: 'Improve SMS System', builders: '(1-3 builders)', reward: '$2500 USD' },
-          { id: 'b3', icon: '🔥', text: 'AI Integrations?', builders: '(1-3 builders)', reward: '$2500 USD' },
+          { id: 'b3', icon: '🔥', text: 'AI Integrations?', builders: '(1-3 builders)' },
       ],
   },
   {
@@ -144,7 +118,7 @@ const projectsData: Project[] = [
       iconInitial: 'G',
       name: 'GMarket',
       description: 'A marketplace that is crypto native',
-      tag: { text: 'Digital ecosystem', bgColor: 'bg-gray-600', textColor: 'text-white' }, // Reusing tag style
+      tag: { text: 'Digital ecosystem', bgColor: 'bg-gray-600', textColor: 'text-white' },
       bounties: [
           { id: 'b1', icon: '❓', text: 'Get 10 listings', builders: '(1-3 builders)', reward: '$1500 YCN' },
           { id: 'b2', icon: '❓', text: 'Recruit team members', builders: '(1-3 builders)', reward: '$2500 YCN' },
@@ -152,21 +126,6 @@ const projectsData: Project[] = [
       ],
   },
   {
-      id: 'gumroad',
-      iconColor: 'bg-pink-500',
-      iconInitial: 'G',
-      name: 'Gumroad',
-      description: 'A marketplace for digital creators to sell',
-      tag: { text: 'Digital marketplace', bgColor: 'bg-pink-300', textColor: 'text-black' },
-      bounties: [
-          { id: 'b1', icon: '❓', text: 'Migrate to Stripe Payment Element', builders: '(1-3 builders)', reward: '$1500 USD' },
-          { id: 'b2', icon: '❓', text: 'Add video reviews', builders: '(1-3 builders)', reward: '$1500 USD' },
-          { id: 'b3', icon: '❓', text: 'Implement PM', builders: '(1-3 builders)', reward: '$2500 SAGA' }, // Using SAGA from image
-      ],
-  },
-   // Add more projects here to fill rows if needed...
-   // Example placeholder to potentially reach 10 items for 2 full rows of 5
-   {
     id: 'placeholder1',
     iconColor: 'bg-purple-500',
     iconInitial: 'P',
@@ -178,7 +137,7 @@ const projectsData: Project[] = [
       { id: 'b2', icon: '💡', text: 'Placeholder Bounty 2' },
     ],
   },
-   {
+  {
     id: 'placeholder2',
     iconColor: 'bg-indigo-500',
     iconInitial: 'P',
@@ -189,7 +148,7 @@ const projectsData: Project[] = [
       { id: 'b1', icon: '💡', text: 'Example Bounty' },
     ],
   },
-];
+].filter(project => !['network-skool', 'gumroad', 'goose', 'js7ab633pye8k2g9987e53kdwh7dpd9a', 'js78mxz4163s6gbnxa4xtgnzcn7dq0dn', 'js789ftfb2cx06han5b87vh1197dpfr2'].includes(project.id));
 
 
 const BoardPage = () => {

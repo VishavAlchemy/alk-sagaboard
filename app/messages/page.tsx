@@ -3,7 +3,6 @@ import React, { useState, useEffect, useRef, Suspense } from 'react'
 import { useQuery, useMutation } from 'convex/react'
 import { api } from '../../convex/_generated/api'
 import { useAuth } from '@clerk/nextjs'
-import Sidebar from '../components/Sidebar'
 import Image from 'next/image'
 import { Gloria_Hallelujah } from 'next/font/google'
 import { useSearchParams } from 'next/navigation'
@@ -37,31 +36,137 @@ const ChatMessage = ({ message, isOwn }: { message: any, isOwn: boolean }) => (
   </div>
 )
 
-// User profile image component
-const UserProfileImage = ({ user }: { user: any }) => {
-  const imageUrl = useStorageUrl(user?.profilePictureId);
-  const [imageError, setImageError] = useState(false);
-  
-  if (!user?.profilePictureId || !imageUrl || imageError) {
+// Separate component for profile image to properly handle hooks
+const ProfileImage = ({ imageSource, name }: { imageSource: string, name: string }) => {
+  const storageUrl = useStorageUrl(imageSource);
+  const finalImageUrl = !imageSource ? '/default-avatar.svg' :
+    imageSource.startsWith('http') || imageSource.startsWith('/') 
+      ? imageSource 
+      : storageUrl;
+
+  return (
+    <div className="relative w-10 h-10">
+      <Image
+        src={finalImageUrl || '/default-avatar.svg'}
+        alt={name}
+        fill
+        className="rounded-full object-cover"
+        sizes="(max-width: 40px) 100vw, 40px"
+        onError={(e) => {
+          const target = e.target as HTMLImageElement;
+          target.src = '/default-avatar.svg';
+        }}
+      />
+    </div>
+  );
+};
+
+// Separate component for conversation item to properly handle hooks
+const ConversationItem = ({ 
+  conversation, 
+  isSelected, 
+  onClick 
+}: { 
+  conversation: ConversationWithUser, 
+  isSelected: boolean,
+  onClick: () => void
+}) => {
+  const avatarProfile = useQuery(api.avatarProfiles.get, { 
+    userId: conversation.otherUser?.clerkId || '' 
+  });
+
+  if (!avatarProfile) {
     return (
-      <div className="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center">
-        <span className="text-sm text-gray-500">
-          {(user?.name || '?')[0]?.toUpperCase()}
-        </span>
+      <div
+        onClick={onClick}
+        className={`p-4 cursor-pointer hover:bg-gray-900 ${
+          isSelected ? 'bg-gray-900' : ''
+        }`}
+      >
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center">
+            <span className="text-sm text-gray-500">
+              {(conversation.otherUser?.firstName || '?')[0]?.toUpperCase()}
+            </span>
+          </div>
+          <div className="min-w-0 flex-1">
+            <h3 className="font-semibold truncate text-white">
+              {`${conversation.otherUser?.firstName} ${conversation.otherUser?.lastName}`}
+            </h3>
+            <p className="text-sm text-gray-400 truncate max-w-[180px]">
+              {conversation.lastMessage || "No messages yet"}
+            </p>
+          </div>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="relative w-10 h-10">
-      <Image
-        src={imageUrl}
-        alt={user.name || ''}
-        fill
-        className="rounded-full object-cover"
-        onError={() => setImageError(true)}
-        sizes="(max-width: 40px) 100vw, 40px"
-      />
+    <div
+      onClick={onClick}
+      className={`p-4 cursor-pointer hover:bg-gray-900 ${
+        isSelected ? 'bg-gray-900' : ''
+      }`}
+    >
+      <div className="flex items-center gap-3">
+        <ProfileImage 
+          imageSource={avatarProfile.personalInfo.image}
+          name={avatarProfile.personalInfo.name}
+        />
+        <div className="min-w-0 flex-1">
+          <h3 className="font-semibold truncate text-white">
+            {avatarProfile.personalInfo.name}
+          </h3>
+          <p className="text-sm text-gray-400 truncate max-w-[180px]">
+            {conversation.lastMessage || "No messages yet"}
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// Separate component for chat header to properly handle hooks
+const ChatHeader = ({ user }: { user: any }) => {
+  const avatarProfile = useQuery(api.avatarProfiles.get, { 
+    userId: user?.clerkId || '' 
+  });
+
+  return (
+    <div className="p-4 border-b border-gray-800">
+      <div className="flex items-center gap-3">
+        {avatarProfile ? (
+          <>
+            <ProfileImage 
+              imageSource={avatarProfile.personalInfo.image}
+              name={avatarProfile.personalInfo.name}
+            />
+            <div>
+              <h2 className="font-semibold text-white">
+                {avatarProfile.personalInfo.name}
+              </h2>
+              <p className="text-sm text-gray-400">
+                {avatarProfile.personalInfo.role}
+              </p>
+            </div>
+          </>
+        ) : (
+          <>
+            <div className="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center">
+              <span className="text-sm text-gray-500">
+                {(user?.firstName || '?')[0]?.toUpperCase()}
+              </span>
+            </div>
+            <div>
+              <h2 className="font-semibold text-white">
+                {user?.firstName} {user?.lastName}
+              </h2>
+              <p className="text-sm text-gray-400">Member</p>
+            </div>
+          </>
+        )}
+      </div>
     </div>
   );
 };
@@ -113,7 +218,7 @@ const MessagesContent = () => {
 
     await sendMessage({
       content: newMessage,
-      receiverId: selectedConversation.otherUser?._id || '',
+      receiverId: selectedConversation.otherUser?.clerkId || '',
       senderId: userId || '',
       conversationId: selectedConversation._id
     })
@@ -121,51 +226,39 @@ const MessagesContent = () => {
   }
 
   return (
-    <div className="flex bg-black min-h-screen">
+    <div className="flex bg-black h-[calc(100vh-64px)]"> {/* Adjusted height for navbar */}
       
       {/* Conversations List */}
-      <div className="w-[280px] border-r border-gray-800 overflow-y-auto">
-        {conversations && conversations.length > 0 ? (
-          conversations.map((conversation) => (
-            <div
-              key={conversation._id}
-              onClick={() => setSelectedConversation(conversation)}
-              className={`p-4 cursor-pointer hover:bg-gray-900 ${
-                selectedConversation?._id === conversation._id ? 'bg-gray-900' : ''
-              }`}
-            >
-              <div className="flex items-center gap-3">
-                <UserProfileImage user={conversation.otherUser} />
-                <div className="min-w-0 flex-1">
-                  <h3 className="font-semibold truncate text-white">{conversation.otherUser?.firstName}</h3>
-                  <p className="text-sm text-gray-400 truncate max-w-[180px]">
-                    {conversation.lastMessage || "No messages yet"}
-                  </p>
-                </div>
-              </div>
+      <div className="w-[280px] border-r border-gray-800 flex flex-col h-full">
+        <div className="p-4 border-b border-gray-800">
+          <h2 className="text-white font-semibold">Messages</h2>
+        </div>
+        <div className="overflow-y-auto flex-1">
+          {conversations && conversations.length > 0 ? (
+            conversations.map((conversation) => (
+              <ConversationItem
+                key={conversation._id}
+                conversation={conversation}
+                isSelected={selectedConversation?._id === conversation._id}
+                onClick={() => setSelectedConversation(conversation)}
+              />
+            ))
+          ) : (
+            <div className="p-4 text-gray-400 text-center">
+              <p className="mb-2">No conversations yet</p>
+              <a href="/members" className="text-blue-400 hover:underline">
+                Connect with buidlers, designers, engineers, etc.
+              </a>
             </div>
-          ))
-        ) : (
-          <div className="p-4 text-gray-400 text-center">
-            <p className="mb-2">No conversations yet</p>
-            <a href="/members" className="text-blue-400 hover:underline">
-              Connect with buidlers, designers, engineers, etc.
-            </a>
-          </div>
-        )}
+          )}
+        </div>
       </div>
 
       {/* Chat Area */}
-      <div className="flex-1 flex flex-col text-white">
+      <div className="flex-1 flex flex-col h-full">
         {selectedConversation ? (
           <>
-            {/* Chat Header */}
-            <div className="p-4 border-b border-gray-800">
-              <div className="flex items-center gap-3">
-                <UserProfileImage user={selectedConversation.otherUser} />
-                <h2 className="font-semibold text-white">{selectedConversation.otherUser?.firstName} </h2>
-              </div>
-            </div>
+            <ChatHeader user={selectedConversation.otherUser} />
 
             {/* Messages */}
             <div className="flex-1 overflow-y-auto p-4">
@@ -188,8 +281,8 @@ const MessagesContent = () => {
             </div>
 
             {/* Message Input */}
-            <form onSubmit={handleSendMessage} className="p-4 border-t border-gray-800">
-              <div className="flex gap-2">
+            <div className="p-4 border-t border-gray-800">
+              <form onSubmit={handleSendMessage} className="flex gap-2">
                 <input
                   type="text"
                   value={newMessage}
@@ -203,8 +296,8 @@ const MessagesContent = () => {
                 >
                   Send
                 </button>
-              </div>
-            </form>
+              </form>
+            </div>
           </>
         ) : (
           <div className="flex-1 flex items-center justify-center text-gray-400">

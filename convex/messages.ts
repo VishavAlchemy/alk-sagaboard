@@ -53,8 +53,8 @@ export const getMessages = query({
   handler: async (ctx, { conversationId }) => {
     return await ctx.db
       .query('messages')
-      .filter(q => q.eq(q.field('conversationId'), conversationId))
-      .order('asc')
+      .withIndex('by_conversation', q => q.eq('conversationId', conversationId))
+      .order('asc', 'createdAt')
       .collect();
   }
 });
@@ -200,5 +200,37 @@ export const startConversation = mutation({
     });
 
     return conversationId;
+  }
+});
+
+// Get unread messages count for a user
+export const getUnreadMessagesCount = query({
+  args: { userId: v.string() },
+  handler: async (ctx, { userId }) => {
+    // Convert to Clerk ID if needed
+    let clerkUserId = userId;
+    if (!userId.startsWith('user_')) {
+      const user = await ctx.db
+        .query('users')
+        .filter(q => q.eq(q.field('_id'), userId))
+        .first();
+      
+      if (user?.clerkId) {
+        clerkUserId = user.clerkId;
+      }
+    }
+    
+    // Get all unread messages where user is the receiver
+    const unreadMessages = await ctx.db
+      .query('messages')
+      .filter(q => 
+        q.and(
+          q.eq(q.field('receiverId'), clerkUserId),
+          q.eq(q.field('read'), false)
+        )
+      )
+      .collect();
+    
+    return unreadMessages.length;
   }
 });

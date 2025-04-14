@@ -41,6 +41,7 @@ interface Company {
   color: string;
   vision: string;
   mission: string;
+  description?: string;
   socialLinks: {
     website?: string;
   };
@@ -60,6 +61,7 @@ const BoardPage = () => {
     type: 'Project',
     vision: '',
     mission: '',
+    description: '',
     principles: [''],
     values: [''],
     socialLinks: {
@@ -108,7 +110,8 @@ const BoardPage = () => {
   
   // Helper function to get company image URL - simplified to use the image directly
   const getCompanyImageUrl = (company: Company) => {
-    return company.image;
+    // Only return the image if it's not the placeholder
+    return company.image !== '/placeholder.svg' ? company.image : '';
   };
 
   // Helper function to get icon based on task category
@@ -230,6 +233,7 @@ const BoardPage = () => {
         type: 'Project',
         vision: '',
         mission: '',
+        description: '',
         principles: [''],
         values: [''],
         socialLinks: {
@@ -308,95 +312,100 @@ const BoardPage = () => {
                 <Link 
                   key={company._id} 
                   href={`/board/company/${company._id}`}
-                  className="block"
+                  className="group bg-black rounded-lg border border-gray-800 hover:border-gray-600 transition-all duration-200 overflow-hidden block"
                 >
-                  <div 
-                    className="group bg-black rounded-lg border border-gray-800 hover:border-gray-600 transition-all duration-200 overflow-hidden"
-                  >
-                    {/* Main card content - make entire card clickable */}
-                    <div className="relative cursor-pointer p-4">
-                      {/* Company Header with Logo and Info */}
-                      <div className="flex items-start space-x-4 mb-4">
-                        {/* Company Logo */}
-                        <div className="relative h-18 w-18 flex-shrink-0 overflow-hidden rounded-md">
+                  <div className="relative cursor-pointer p-4">
+                    {/* Company Header with Logo and Info */}
+                    <div className="flex items-start space-x-4 mb-4">
+                      {/* Company Logo */}
+                      <div className="relative h-18 w-18 flex-shrink-0 overflow-hidden rounded-md">
+                        {getCompanyImageUrl(company) ? (
                           <Image 
                             src={getCompanyImageUrl(company)}
                             alt={`${company.name} logo`}
                             fill
                             className="object-contain p-2 transition-transform group-hover:scale-105"
                           />
-                        </div>
-
-                        {/* Company Info */}
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-start justify-between mb-1">
-                            <h2 className="font-semibold text-lg group-hover:text-gray-300 transition-colors truncate">
-                              {company.name}
-                            </h2>
-                            <span className={`ml-2 px-2 py-1 rounded-full text-xs font-medium ${bgColor} ${textColor} flex-shrink-0`}>
-                              {type}
-                            </span>
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center bg-gray-900 text-gray-600">
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                            </svg>
                           </div>
-                          <p className="text-gray-400 text-sm mb-1 min-h-[2.5rem]">
-                            {company.role.split(' ').slice(0, 4).join(' ')}
-                            <br />
-                            {company.role.split(' ').slice(4).join(' ')}
-                          </p>
-                          <div className="flex items-center justify-between text-xs text-gray-500">
-                            <span className="truncate">{company.location}</span>
-                            {company.socialLinks?.website && (
-                              <a 
-                                href={company.socialLinks.website} 
-                                target="_blank" 
-                                rel="noopener noreferrer" 
-                                className="text-gray-400 hover:text-white transition-colors ml-2 flex-shrink-0"
-                                onClick={(e) => {
-                                  e.preventDefault();
-                                  e.stopPropagation();
-                                  window.open(company.socialLinks.website, '_blank');
-                                }}
-                              >
-                                Website ↗
-                              </a>
-                            )}
-                          </div>
-                        </div>
+                        )}
                       </div>
 
-                      {/* Tasks section */}
-                      <div className="space-y-2 bg-gray-900/50 rounded-lg p-3">
-                        <div className="flex items-center justify-between mb-2">
-                          <span className="text-xs font-medium text-gray-400">Active Tasks</span>
-                          <span className="text-xs text-gray-600">{(tasksByCompany[company._id] || []).length} total</span>
+                      {/* Company Info */}
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-start justify-between mb-1">
+                          <h2 className="font-semibold text-lg group-hover:text-gray-300 transition-colors truncate">
+                            {company.name}
+                          </h2>
+                          <span className={`ml-2 px-2 py-1 rounded-full text-xs font-medium ${bgColor} ${textColor} flex-shrink-0`}>
+                            {type}
+                          </span>
                         </div>
-                        {(tasksByCompany[company._id] || []).slice(0, 3).map((task: Task) => (
-                          <button 
-                            key={task._id} 
-                            className="flex items-center justify-between w-full text-sm bg-black/40 hover:bg-black/60 p-2 rounded transition-colors text-left"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleTaskClick(company._id, task);
-                            }}
-                          >
-                            <div className="flex items-center space-x-2">
-                              <span className="text-lg">{getTaskIcon(task.category)}</span>
-                              <div>
-                                <p className="text-gray-300 text-sm truncate max-w-[150px]">
-                                  {task.name || task.text}
-                                </p>
-                                {task.forRole && (
-                                  <p className="text-gray-500 text-xs">{task.forRole}</p>
-                                )}
-                              </div>
+                        <p className="text-gray-400 text-sm mb-1 min-h-[2.5rem]">
+                          {company.role.split(' ').slice(0, 4).join(' ')}
+                          <br />
+                          {company.role.split(' ').slice(4).join(' ')}
+                        </p>
+                        {company.description && (
+                          <p className="text-gray-500 text-sm mt-2 line-clamp-2">
+                            {company.description}
+                          </p>
+                        )}
+                        <div className="flex items-center justify-between text-xs text-gray-500">
+                          <span className="truncate">{company.location}</span>
+                          {company.socialLinks?.website && (
+                            <button 
+                              className="text-gray-400 hover:text-white transition-colors ml-2 flex-shrink-0"
+                              onClick={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                window.open(company.socialLinks.website, '_blank', 'noopener,noreferrer');
+                              }}
+                            >
+                              Website ↗
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Tasks section */}
+                    <div className="space-y-2 bg-gray-900/50 rounded-lg p-3">
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="text-xs font-medium text-gray-400">Active Tasks</span>
+                        <span className="text-xs text-gray-600">{(tasksByCompany[company._id] || []).length} total</span>
+                      </div>
+                      {(tasksByCompany[company._id] || []).slice(0, 3).map((task: Task) => (
+                        <button 
+                          key={task._id} 
+                          className="flex items-center justify-between w-full text-sm bg-black/40 hover:bg-black/60 p-2 rounded transition-colors text-left"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleTaskClick(company._id, task);
+                          }}
+                        >
+                          <div className="flex items-center space-x-2">
+                            <span className="text-lg">{getTaskIcon(task.category)}</span>
+                            <div>
+                              <p className="text-gray-300 text-sm">
+                                {task.name || task.text}
+                              </p>
+                              {task.forRole && (
+                                <p className="text-gray-500 text-xs">{task.forRole}</p>
+                              )}
                             </div>
-                            {task.reward && (
+                          </div>
+                        {/*   {task.reward && (
                               <div className="text-gray-400 text-xs font-mono ml-2">
                                 {formatReward(task.reward)}
                               </div>
-                            )}
-                          </button>
-                        ))}
-                      </div>
+                            )} */}
+                        </button>
+                      ))}
                     </div>
                   </div>
                 </Link>
@@ -412,87 +421,95 @@ const BoardPage = () => {
                 <Link 
                   key={company._id} 
                   href={`/board/company/${company._id}`}
-                  className="block"
+                  className="group bg-black rounded-lg border border-gray-800 hover:border-gray-600 transition-all duration-200 overflow-hidden block"
                 >
-                  <div 
-                    className="group bg-black rounded-lg border border-gray-800 hover:border-gray-600 transition-all duration-200 overflow-hidden"
-                  >
-                    <div className="p-6">
-                      <div className="flex items-start justify-between">
-                        <div className="flex items-center space-x-4">
-                          <div className="relative h-16 w-16 overflow-hidden">
+                  <div className="p-6">
+                    <div className="flex items-start justify-between">
+                      <div className="flex items-center space-x-4">
+                        <div className="relative h-16 w-16 overflow-hidden">
+                          {getCompanyImageUrl(company) ? (
                             <Image 
                               src={getCompanyImageUrl(company)}
                               alt={`${company.name} logo`}
                               fill
                               className="object-contain transition-transform group-hover:scale-105"
                             />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center bg-gray-900 text-gray-600">
+                              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                              </svg>
+                            </div>
+                          )}
+                        </div>
+                        <div>
+                          <div className="flex items-center space-x-2">
+                            <h2 className="font-semibold text-lg group-hover:text-gray-300 transition-colors">
+                              {company.name}
+                            </h2>
+                            <span className={`px-2 py-1 rounded-full text-xs font-medium ${bgColor} ${textColor}`}>
+                              {type}
+                            </span>
                           </div>
-                          <div>
-                            <div className="flex items-center space-x-2">
-                              <h2 className="font-semibold text-lg group-hover:text-gray-300 transition-colors">
-                                {company.name}
-                              </h2>
-                              <span className={`px-2 py-1 rounded-full text-xs font-medium ${bgColor} ${textColor}`}>
-                                {type}
-                              </span>
-                            </div>
-                            <p className="text-gray-400 text-sm mt-1">{company.role.split(' ').slice(0, 4).join(' ')}</p>
-                            <p className="text-gray-400 text-sm mt-1">
-                              {company.role.split(' ').slice(4).join(' ')}
+                          <p className="text-gray-400 text-sm mt-1">{company.role.split(' ').slice(0, 4).join(' ')}</p>
+                          <p className="text-gray-400 text-sm mt-1">
+                            {company.role.split(' ').slice(4).join(' ')}
+                          </p>
+                          {company.description && (
+                            <p className="text-gray-500 text-sm mt-2 line-clamp-2">
+                              {company.description}
                             </p>
-                            <div className="flex items-center space-x-4 mt-2 text-xs text-gray-500">
-                              <span>{company.location}</span>
-                              {company.socialLinks?.website && (
-                                <a 
-                                  href={company.socialLinks.website} 
-                                  target="_blank" 
-                                  rel="noopener noreferrer" 
-                                  className="text-gray-400 hover:text-white transition-colors"
-                                  onClick={(e) => {
-                                    e.preventDefault();
-                                    e.stopPropagation();
-                                    window.open(company.socialLinks.website, '_blank');
-                                  }}
-                                >
-                                  Website ↗
-                                </a>
-                              )}
-                            </div>
+                          )}
+                          <div className="flex items-center space-x-4 mt-2 text-xs text-gray-500">
+                            <span>{company.location}</span>
+                            {company.socialLinks?.website && (
+                              <button 
+                                className="text-gray-400 hover:text-white transition-colors"
+                                onClick={(e) => {
+                                  e.preventDefault();
+                                  e.stopPropagation();
+                                  window.open(company.socialLinks.website, '_blank', 'noopener,noreferrer');
+                                }}
+                              >
+                                Website ↗
+                              </button>
+                            )}
                           </div>
                         </div>
                       </div>
+                    </div>
 
-                      {/* Tasks section with new design */}
-                      <div className="mt-6 space-y-2 bg-gray-900/50 rounded-lg p-4">
-                        <div className="flex items-center justify-between mb-3">
-                          <span className="text-sm font-medium text-gray-400">Active Tasks</span>
-                          <span className="text-xs text-gray-600">{(tasksByCompany[company._id] || []).length} total</span>
-                        </div>
-                        <div className="grid gap-2">
-                          {(tasksByCompany[company._id] || []).slice(0, 3).map((task: Task) => (
-                            <button 
-                              key={task._id} 
-                              className="flex items-center justify-between w-full text-sm bg-black/40 hover:bg-black/60 p-3 rounded transition-colors text-left"
-                              onClick={() => handleTaskClick(company._id, task)}
-                            >
-                              <div className="flex items-center space-x-3">
-                                <span className="text-lg">{getTaskIcon(task.category)}</span>
-                                <div>
-                                  <p className="text-gray-300">{task.name || task.text}</p>
-                                  {task.forRole && (
-                                    <p className="text-gray-500 text-xs">{task.forRole}</p>
-                                  )}
-                                </div>
+                    {/* Tasks section with new design */}
+                    <div className="mt-6 space-y-2 bg-gray-900/50 rounded-lg p-4">
+                      <div className="flex items-center justify-between mb-3">
+                        <span className="text-sm font-medium text-gray-400">Active Tasks</span>
+                        <span className="text-xs text-gray-600">{(tasksByCompany[company._id] || []).length} total</span>
+                      </div>
+                      <div className="grid gap-2">
+                        {(tasksByCompany[company._id] || []).slice(0, 3).map((task: Task) => (
+                          <button 
+                            key={task._id} 
+                            className="flex items-center justify-between w-full text-sm bg-black/40 hover:bg-black/60 p-3 rounded transition-colors text-left"
+                            onClick={() => handleTaskClick(company._id, task)}
+                          >
+                            <div className="flex items-center space-x-3">
+                              <span className="text-lg">{getTaskIcon(task.category)}</span>
+                              <div>
+                                <p className="text-gray-300 text-sm">
+                                  {task.name || task.text}
+                                </p>
+                                {task.forRole && (
+                                  <p className="text-gray-500 text-xs">{task.forRole}</p>
+                                )}
                               </div>
-                              {task.reward && (
-                                <div className="text-gray-400 text-xs font-mono">
-                                  {formatReward(task.reward)}
-                                </div>
-                              )}
-                            </button>
-                          ))}
-                        </div>
+                            </div>
+                            {task.reward && (
+                              <div className="text-gray-400 text-xs font-mono">
+                                {formatReward(task.reward)}
+                              </div>
+                            )}
+                          </button>
+                        ))}
                       </div>
                     </div>
                   </div>
@@ -620,6 +637,17 @@ const BoardPage = () => {
                           onChange={(e) => setNewCompany({ ...newCompany, location: e.target.value })}
                           className="w-full bg-gray-900 border border-gray-800 rounded-md px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-500 hover:border-gray-700 transition-colors"
                           placeholder="e.g. San Francisco, CA"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-gray-300 mb-1">Description</label>
+                        <textarea
+                          value={newCompany.description}
+                          onChange={(e) => setNewCompany({ ...newCompany, description: e.target.value })}
+                          className="w-full bg-gray-900 border border-gray-800 rounded-md px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-500 hover:border-gray-700 transition-colors"
+                          rows={3}
+                          placeholder="Brief description of your company/project"
                         />
                       </div>
 

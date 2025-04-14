@@ -8,8 +8,28 @@ import { type AvatarProfile } from '@/app/types/avatarProfile';
 import EditProfileButton from '@/app/components/EditProfileButton'
 import { useMutation } from 'convex/react';
 import { api } from '@/convex/_generated/api';
+import { useStorageUrl } from '@/convex/useStorageUrl'
 // Assuming Sidebar might be needed later or can be removed if not part of the new design
 // import Sidebar from '../components/Sidebar' 
+
+// Separate component for profile image to properly handle hooks
+const ProfileImage = ({ imageSource, name, size = 50 }: { imageSource: string | null, name: string, size?: number }) => {
+  const storageUrl = useStorageUrl(imageSource);
+  const finalImageUrl = !imageSource ? "/default-avatar.svg" :
+    imageSource.startsWith('http') || imageSource.startsWith('/') 
+      ? imageSource 
+      : storageUrl;
+
+  return (
+    <Image 
+      src={finalImageUrl || "/default-avatar.svg"}
+      alt={`${name} Profile Picture`}
+      width={size}
+      height={size}
+      className="rounded-full border-2 border-gray-700"
+    />
+  );
+};
 
 // Helper function to get icon color
 const getIconColor = (color: string) => {
@@ -217,12 +237,10 @@ const ProfilePage = () => {
             {/* Profile Info */}
             <div className="flex items-start space-x-4 mb-6">
               <div className="flex-shrink-0">
-                <Image 
-                  src={profile.personalInfo.image}
-                  alt={`${profile.personalInfo.name} Profile Picture`}
-                  width={110}
-                  height={110}
-                  className="rounded-full border-2 border-gray-700" 
+                <ProfileImage 
+                  imageSource={profile.personalInfo.image}
+                  name={profile.personalInfo.name}
+                  size={110}
                 />
               </div>
               <div>

@@ -4,6 +4,7 @@ export type AvatarProfile = {
   _id: Id<"avatarProfiles">;
   _creationTime: number;
   userId: string;
+  profilePictureId?: string;
   personalInfo: {
     name: string;
     role: string;

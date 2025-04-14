@@ -1,5 +1,5 @@
 'use client'
-import React from 'react'
+import React, { useState } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { useQuery, useMutation } from "convex/react";
@@ -9,6 +9,9 @@ import { useParams } from "next/navigation";
 import { useUser } from "@clerk/nextjs";
 import ImageUpload from "@/app/components/ImageUpload";
 import { useStorageUrl } from "@/app/hooks/useStorageUrl";
+import { Button } from "@/app/components/ui/button";
+import { Modal } from "@/app/components/ui/modal";
+import { uploadCompanyImage } from "@/app/lib/storage";
 // Assuming Sidebar might be needed later or can be removed if not part of the new design
 // import Sidebar from '../components/Sidebar' 
 
@@ -116,6 +119,7 @@ interface Company {
   values: string[];
   createdAt: number;
   updatedAt: number;
+  description?: string;
 }
 
 interface Task {
@@ -141,6 +145,14 @@ interface Task {
   updatedAt: number;
 }
 
+interface ImageUploadProps {
+  currentImageUrl: string;
+  onUpload: (file: File) => Promise<void>;
+  isUploading?: boolean;
+  hasError?: boolean;
+  className?: string;
+}
+
 const CompanyProfilePage = () => {
   const params = useParams();
   const { user } = useUser();
@@ -149,7 +161,23 @@ const CompanyProfilePage = () => {
   const [showDeleteTaskModal, setShowDeleteTaskModal] = React.useState(false);
   const [showEditCompanyModal, setShowEditCompanyModal] = React.useState(false);
   const [selectedTaskToDelete, setSelectedTaskToDelete] = React.useState<{ id: Id<"tasks">, text: string } | null>(null);
-  const [editCompanyData, setEditCompanyData] = React.useState({
+  const [editCompanyData, setEditCompanyData] = React.useState<{
+    name: string;
+    role: string;
+    location: string;
+    image: string;
+    storageId: string;
+    color: string;
+    type: string;
+    socialLinks: {
+      website: string;
+    };
+    vision: string;
+    mission: string;
+    principles: string[];
+    values: string[];
+    description: string;
+  }>({
     name: '',
     role: '',
     location: '',
@@ -163,7 +191,8 @@ const CompanyProfilePage = () => {
     vision: '',
     mission: '',
     principles: [''],
-    values: ['']
+    values: [''],
+    description: ''
   });
   const [newTask, setNewTask] = React.useState({
     category: '',
@@ -178,6 +207,8 @@ const CompanyProfilePage = () => {
       }
     }
   });
+  const [isUploading, setIsUploading] = React.useState(false);
+  const [imageError, setImageError] = React.useState(false);
 
   // Mutations
   const createTask = useMutation(api.companies.createTask);
@@ -207,7 +238,8 @@ const CompanyProfilePage = () => {
         vision: company.vision,
         mission: company.mission,
         principles: company.principles,
-        values: company.values
+        values: company.values,
+        description: company.description || ''
       });
     }
   }, [company, companyImageUrl]);
@@ -215,8 +247,8 @@ const CompanyProfilePage = () => {
   // Loading state
   if (!company || !companyTasks) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-black text-white">
-        <div className="animate-spin rounded-full h-32 w-32 border-t-2 border-b-2 border-gray-300"></div>
+      <div className="flex h-screen items-center justify-center">
+        <div className="h-32 w-32 animate-spin rounded-full border-b-2 border-gray-900"></div>
       </div>
     );
   }
@@ -293,13 +325,24 @@ const CompanyProfilePage = () => {
     }
   };
 
-  const handleImageUpload = (storageId: string) => {
-    setEditCompanyData(prev => ({
-      ...prev,
-      storageId,
-      // Update the image preview immediately using the company's URL
-      image: companyImageUrl || prev.image
-    }));
+  const handleImageUpload = async (file: File) => {
+    setIsUploading(true);
+    setImageError(false);
+    try {
+      const { companyImageUrl } = await uploadCompanyImage({
+        file,
+        companyId: company._id,
+      });
+      setEditCompanyData(prev => ({
+        ...prev,
+        image: companyImageUrl || prev.image,
+      }));
+    } catch (error) {
+      console.error("Error uploading image:", error);
+      setImageError(true);
+    } finally {
+      setIsUploading(false);
+    }
   };
 
   return (
@@ -313,13 +356,19 @@ const CompanyProfilePage = () => {
             {/* Company Info with Edit Button */}
             <div className="flex items-start space-x-4 mb-6">
               <div className="flex-shrink-0">
-                <Image
-                  src={companyImageUrl || company.image}
-                  alt={`${company.name} Logo`}
-                  width={110}
-                  height={110}
-                  className="rounded-full border-2 border-gray-700"
-                />
+                <div className="w-[110px] h-[110px] relative">
+                  <Image
+                    src={companyImageUrl || company.image}
+                    alt={`${company.name} Logo`}
+                    fill
+                    className="rounded-full border-2 border-gray-700 object-cover"
+                    onError={(e) => {
+                      // Fallback to default image or SVG placeholder
+                      const target = e.target as HTMLImageElement;
+                      target.src = '/placeholder.svg';
+                    }}
+                  />
+                </div>
               </div>
               <div className="flex-grow">
                 <div className="flex justify-between items-start">
@@ -327,6 +376,11 @@ const CompanyProfilePage = () => {
                     <h1 className="text-3xl md:text-4xl font-bold mb-1">{company.name}</h1>
                     <p className="text-gray-400">{company.role}</p>
                     <p className="text-gray-400 mb-3">{company.location}</p>
+                    {company.description && (
+                      <p className="text-gray-300 mb-4 max-w-2xl">
+                        {company.description}
+                      </p>
+                    )}
                     <div className="flex items-center space-x-2">
                       {company.socialLinks?.website && (
                         <a href={company.socialLinks.website} target="_blank" rel="noopener noreferrer" className="bg-transparent hover:bg-gray-800 p-2 rounded-full transition-colors">
@@ -364,46 +418,51 @@ const CompanyProfilePage = () => {
                   </button>
                 )}
               </div>
-              <div className="space-y-4">
+              <div className="space-y-6">
                 {Object.entries(tasksByCategory).map(([category, categoryTasks]) => (
-                  <div key={category} className="mb-4">
-                    <div className="flex items-center space-x-2 mb-1">
+                  <div key={category} className="border border-gray-700 rounded-lg overflow-hidden">
+                    <div className="bg-gray-800/50 p-3 flex items-center space-x-2">
                       <Triangle 
                         color={departmentColors[category] || "gray"}
-                        direction="right"
+                        direction="down"
                       />
                       <h3 className="text-lg font-medium text-gray-300">{category}</h3>
                     </div>
-                    <div className="pl-5 text-sm text-gray-300 space-y-1">
+                    <div className="divide-y divide-gray-700">
                       {categoryTasks.map((task) => (
                         <div 
                           key={task._id}
-                          className="group flex items-start justify-between hover:bg-gray-800/30 p-2 rounded-md transition-colors"
+                          className="group flex items-start justify-between p-3 hover:bg-gray-800/30 transition-colors"
                         >
                           <Link 
                             href={`/board/company/task/${task._id}`}
-                            className="flex-1"
+                            className="flex-1 text-gray-300 hover:text-white transition-colors"
                           >
-                            <p>- {task.text}</p>
-                            {task.reward && (
-                              <p className="text-xs text-gray-400 ml-2">
-                                Reward: {typeof task.reward === 'number' 
-                                  ? `${task.reward} points` 
-                                  : `${task.reward.details.amount} ${task.reward.details.currency}${task.reward.details.description ? ` (${task.reward.details.description})` : ''}`}
-                              </p>
-                            )}
+                            <div className="text-sm">
+                              {task.text}
+                              {task.forRole && (
+                                <span className="ml-2 text-xs text-gray-500">• {task.forRole}</span>
+                              )}
+                              {task.reward && (
+                                <span className="ml-2 text-xs text-gray-500">
+                                  • {typeof task.reward === 'number' 
+                                    ? `${task.reward} points`
+                                    : `${task.reward.details.amount} ${task.reward.details.currency}${task.reward.details.description ? ` (${task.reward.details.description})` : ''}`
+                                  }
+                                </span>
+                              )}
+                            </div>
                             {task.additionalInfo && (
-                              <p className="text-xs text-gray-400 ml-2">{task.additionalInfo}</p>
+                              <p className="text-xs text-gray-500 mt-1">{task.additionalInfo}</p>
                             )}
                           </Link>
                           {isAdmin && (
                             <button
-                              onClick={(e) => {
-                                e.preventDefault();
+                              onClick={() => {
                                 setSelectedTaskToDelete({ id: task._id, text: task.text });
                                 setShowDeleteTaskModal(true);
                               }}
-                              className="opacity-0 group-hover:opacity-100 ml-2 p-1.5 hover:bg-gray-800 rounded transition-all border border-gray-700"
+                              className="opacity-0 group-hover:opacity-100 ml-3 p-1.5 hover:bg-gray-800 rounded transition-all border border-gray-700 flex-shrink-0"
                             >
                               <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-gray-400 hover:text-red-500 transition-colors" viewBox="0 0 20 20" fill="currentColor">
                                 <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" />
@@ -671,8 +730,10 @@ const CompanyProfilePage = () => {
                     <label className="block text-sm font-medium text-gray-300 mb-1">Company Logo</label>
                     <div className="w-32 h-32">
                       <ImageUpload
-                        currentImageUrl={editCompanyData.image}
-                        onImageUpload={handleImageUpload}
+                        currentImageUrl={companyImageUrl || company.image}
+                        onUpload={handleImageUpload}
+                        isUploading={isUploading}
+                        hasError={imageError}
                         className="w-full h-full"
                       />
                     </div>
@@ -718,6 +779,17 @@ const CompanyProfilePage = () => {
                         socialLinks: { ...editCompanyData.socialLinks, website: e.target.value }
                       })}
                       className="w-full bg-gray-800 border border-gray-700 rounded-md px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-300 mb-1">Description</label>
+                    <textarea
+                      value={editCompanyData.description}
+                      onChange={(e) => setEditCompanyData({ ...editCompanyData, description: e.target.value })}
+                      className="w-full bg-gray-800 border border-gray-700 rounded-md px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      rows={3}
+                      placeholder="Brief description of your company/project"
                     />
                   </div>
                 </div>

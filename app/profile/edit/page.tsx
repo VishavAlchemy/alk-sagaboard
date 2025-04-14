@@ -7,6 +7,7 @@ import { useAvatarProfile } from '../../hooks/useAvatarProfile'
 import { useAuth } from "@clerk/nextjs"
 import { useMutation } from "convex/react"
 import { api } from "@/convex/_generated/api"
+import { useStorageUrl } from '@/convex/useStorageUrl'
 
 // Helper function to get icon color - same as profile page
 const getIconColor = (color: string) => {
@@ -149,6 +150,8 @@ const ProfileEditPage = () => {
     }]
   })
 
+  const imageUrl = useStorageUrl(formData.personalInfo.image || null)
+
   // Load existing profile data when available
   useEffect(() => {
     if (profile) {
@@ -196,6 +199,10 @@ const ProfileEditPage = () => {
         headers: { "Content-Type": file.type },
         body: file,
       })
+
+      if (!result.ok) {
+        throw new Error('Failed to upload file')
+      }
 
       const { storageId } = await result.json()
       await uploadFile({ storageId, fileName: file.name })
@@ -290,7 +297,7 @@ const ProfileEditPage = () => {
               <div className="flex flex-col md:flex-row items-center md:items-start space-y-4 md:space-y-0 md:space-x-6 mb-8">
                 <div className="flex-shrink-0 relative group">
                   <Image 
-                    src={formData.personalInfo.image || "/profilev1/pp.svg"}
+                    src={imageUrl || "/profilev1/pp.svg"}
                     alt="Profile Picture"
                     width={110}
                     height={110}

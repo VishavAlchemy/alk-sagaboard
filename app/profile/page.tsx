@@ -5,6 +5,7 @@ import { useAvatarProfile } from '../hooks/useAvatarProfile'
 import { useAuth } from "@clerk/nextjs";
 import { type AvatarProfile } from '../types/avatarProfile';
 import { useRouter } from 'next/navigation'
+import { useStorageUrl } from '@/convex/useStorageUrl'
 // Assuming Sidebar might be needed later or can be removed if not part of the new design
 // import Sidebar from '../components/Sidebar' 
 
@@ -76,6 +77,7 @@ const ProfilePage = () => {
   const { profile, isLoading, isAuthenticated, createProfile } = useAvatarProfile();
   const { userId, isLoaded: isAuthLoaded } = useAuth();
   const router = useRouter();
+  const imageUrl = useStorageUrl(profile?.personalInfo.image || null);
 
   // Show loading state while auth or profile is loading
   if (!isAuthLoaded || isLoading) {
@@ -115,7 +117,7 @@ const ProfilePage = () => {
                       name: "Your Name",
                       role: "Your Role",
                       location: "Your Location",
-                      image: "/profilev1/pp.svg",
+                      image: "",
                       socialLinks: {
                         website: "https://yourwebsite.com",
                         github: "https://github.com/yourusername",
@@ -173,7 +175,7 @@ const ProfilePage = () => {
             <div className="flex items-start space-x-4 mb-6">
               <div className="flex-shrink-0">
                 <Image 
-                  src={profile.personalInfo.image}
+                  src={imageUrl || "/profilev1/pp.svg"}
                   alt={`${profile.personalInfo.name} Profile Picture`}
                   width={110}
                   height={110}

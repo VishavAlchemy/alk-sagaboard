@@ -260,6 +260,7 @@ export const updateCompany = mutation({
     storageId: v.optional(v.string()),
     color: v.string(),
     type: v.string(),
+    description: v.optional(v.string()),
     socialLinks: v.object({
       website: v.optional(v.string()),
     }),
@@ -332,6 +333,16 @@ export const getTasksForCompanies = query({
     // Get all companies first
     const companies = await ctx.db
       .query("companies")
+      .filter(q => 
+        q.and(
+          q.neq(q.field("name"), "network-skool"),
+          q.neq(q.field("name"), "gumroad"),
+          q.neq(q.field("name"), "goose"),
+          q.neq(q.field("name"), "js7ab633pye8k2g9987e53kdwh7dpd9a"),
+          q.neq(q.field("name"), "js78mxz4163s6gbnxa4xtgnzcn7dq0dn"),
+          q.neq(q.field("name"), "js789ftfb2cx06han5b87vh1197dpfr2")
+        )
+      )
       .collect();
 
     // Get tasks for all companies
@@ -381,6 +392,7 @@ export const createCompany = mutation({
     color: v.optional(v.string()),
     adminId: v.string(),
     storageId: v.optional(v.string()),
+    description: v.string(),
     socialLinks: v.object({
       website: v.optional(v.string()),
     }),
@@ -403,5 +415,41 @@ export const createCompany = mutation({
 
     const companyId = await ctx.db.insert("companies", companyData);
     return companyId;
+  },
+});
+
+export const deleteCompanies = mutation({
+  args: {
+    companyIds: v.array(v.id("companies")),
+  },
+  handler: async (ctx, args) => {
+    // Delete each company and its associated tasks
+    for (const companyId of args.companyIds) {
+      // Delete all tasks associated with this company
+      const tasks = await ctx.db
+        .query("tasks")
+        .withIndex("by_company", (q) => q.eq("companyId", companyId))
+        .collect();
+      
+      for (const task of tasks) {
+        // Delete all submissions for this task
+        const submissions = await ctx.db
+          .query("submissions")
+          .withIndex("by_task", (q) => q.eq("taskId", task._id))
+          .collect();
+        
+        for (const submission of submissions) {
+          await ctx.db.delete(submission._id);
+        }
+        
+        // Delete the task
+        await ctx.db.delete(task._id);
+      }
+      
+      // Delete the company
+      await ctx.db.delete(companyId);
+    }
+    
+    return true;
   },
 });
