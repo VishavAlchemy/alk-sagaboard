@@ -453,3 +453,36 @@ export const deleteCompanies = mutation({
     return true;
   },
 });
+
+export const updateCompanyStorageId = mutation({
+  args: {
+    companyId: v.id("companies"),
+    storageId: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const { companyId, storageId } = args;
+    
+    // Verify company exists
+    const company = await ctx.db.get(companyId);
+    if (!company) {
+      throw new Error("Company not found");
+    }
+
+    // If there's a new storageId, delete the old one
+    if (company.storageId && storageId !== company.storageId) {
+      try {
+        await ctx.storage.delete(company.storageId);
+      } catch (error) {
+        console.error('Failed to delete old image:', error);
+      }
+    }
+
+    // Update company
+    await ctx.db.patch(companyId, {
+      storageId,
+      updatedAt: Date.now(),
+    });
+
+    return companyId;
+  },
+});

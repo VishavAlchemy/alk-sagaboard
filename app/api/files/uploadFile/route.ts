@@ -19,7 +19,7 @@ export async function POST(request: NextRequest) {
     await convex.mutation(api.files.uploadFile, { storageId, fileName });
     
     // Update company with new image storageId
-    await convex.mutation(api.companies.updateCompany, {
+    await convex.mutation(api.companies.updateCompanyStorageId, {
       companyId,
       storageId,
     });

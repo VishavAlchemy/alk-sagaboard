@@ -54,7 +54,7 @@ export const getMessages = query({
     return await ctx.db
       .query('messages')
       .withIndex('by_conversation', q => q.eq('conversationId', conversationId))
-      .order('asc', 'createdAt')
+      .order("asc")
       .collect();
   }
 });
