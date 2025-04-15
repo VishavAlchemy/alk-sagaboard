@@ -194,6 +194,7 @@ const MessagesContent = () => {
     selectedConversation ? { conversationId: selectedConversation._id } : 'skip'
   )
   const sendMessage = useMutation(api.messages.sendMessage)
+  const markMessagesAsRead = useMutation(api.messages.markMessagesAsRead)
 
   // Auto-scroll to bottom when messages change
   useEffect(() => {
@@ -211,6 +212,16 @@ const MessagesContent = () => {
       }
     }
   }, [conversationIdFromUrl, conversations])
+
+  // Mark messages as read when conversation is selected
+  useEffect(() => {
+    if (selectedConversation && userId) {
+      markMessagesAsRead({ 
+        conversationId: selectedConversation._id,
+        userId: userId
+      })
+    }
+  }, [selectedConversation, userId, markMessagesAsRead])
 
   const handleSendMessage = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()

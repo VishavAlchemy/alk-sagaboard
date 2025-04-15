@@ -69,25 +69,10 @@ export default function Home() {
         <div className="flex justify-center mb-8">
           <Image src="/alk-cities.svg" alt="SagaCity Logo" width={450} height={450} />
         </div>
-          <h1 className="text-5xl md:text-6xl font-bold text-center text-white">Build Digital Tribes, Build Digital Artificats & <br /> Start Your Scale</h1>
+          <h1 className="text-5xl md:text-6xl font-bold text-center text-white">Build Digital Tribes <br /> Create Digital Artificats & Scale</h1>
           <p className={`text-xl md:text-2xl mt-4 ${Geist_Mono.className} text-center text-white/90`}>We help deploy squads & digital builders into <br />  organizations & projects to build digital infrastructure</p>
 
-        {/*   <div className="flex overflow-x-auto justify-start md:justify-center items-center gap-3 md:gap-5 mt-8 px-2 pb-2 no-scrollbar">
-            {circleData.map((circle) => (
-              <a key={circle.id} href={circle.href} className="flex-shrink-0">
-                <div className="w-10 md:w-16 h-10 md:h-16 rounded-full bg-white/20 overflow-hidden flex items-center justify-center hover:bg-white/30 transition-colors">
-                  <Image 
-                    src={circle.src} 
-                    alt={circle.alt} 
-                    width={64} 
-                    height={64} 
-                    className="w-full h-full object-cover"
-                  />
-                </div>
-              </a>
-            ))}
-          </div> */}
-
+  
           <div className="flex flex-row justify-center mt-8 gap-8">
             <Link href="/board">
             <button className="bg-white text-2xl text-black px-6 py-4 ">

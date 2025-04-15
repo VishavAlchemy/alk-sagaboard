@@ -234,3 +234,44 @@ export const getUnreadMessagesCount = query({
     return unreadMessages.length;
   }
 });
+
+// Mark messages as read for a specific conversation
+export const markMessagesAsRead = mutation({
+  args: { 
+    conversationId: v.id("conversations"),
+    userId: v.string() 
+  },
+  handler: async (ctx, { conversationId, userId }) => {
+    // Convert to Clerk ID if needed
+    let clerkUserId = userId;
+    if (!userId.startsWith('user_')) {
+      const user = await ctx.db
+        .query('users')
+        .filter(q => q.eq(q.field('_id'), userId))
+        .first();
+      
+      if (user?.clerkId) {
+        clerkUserId = user.clerkId;
+      }
+    }
+    
+    // Get all unread messages for this user in this conversation
+    const unreadMessages = await ctx.db
+      .query('messages')
+      .withIndex('by_conversation', q => q.eq('conversationId', conversationId))
+      .filter(q => 
+        q.and(
+          q.eq(q.field('receiverId'), clerkUserId),
+          q.eq(q.field('read'), false)
+        )
+      )
+      .collect();
+    
+    // Mark all as read
+    for (const message of unreadMessages) {
+      await ctx.db.patch(message._id, { read: true });
+    }
+    
+    return unreadMessages.length;
+  }
+});
